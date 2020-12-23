@@ -155,7 +155,7 @@ export default {
     },
     async fetchData() {
       await this.getProductByID(this.$route.params.id);
-
+      console.log(this.$route.params.id);
       // reset in order to trigger recalculation in carousel - carousel UI breaks without this
       this.relatedProducts = null;
       this.getRelatedProducts();
@@ -163,6 +163,7 @@ export default {
       this.recordProductViewed(this.$route.query.feature, this.$route.query.exp);
     },
     async getRelatedProducts() {
+      console.log(this.product.id);
       const response = await RecommendationsRepository.getRelatedProducts(
         this.personalizeUserID ?? '',
         this.product.id,

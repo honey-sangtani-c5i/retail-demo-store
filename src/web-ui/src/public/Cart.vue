@@ -27,38 +27,67 @@
               <div class="summary-quantity">{{ summaryQuantityReadout }}</div>
               <div class="summary-total mb-2 font-weight-bold">Your Total: {{ formattedCartTotal }}</div>
               <router-link to="/checkout" class="checkout-btn mb-3 btn btn-outline-dark btn-block btn-lg"
-                >Checkout</router-link
-              >
+                >Checkout
+              </router-link>
               <button v-if="pinpointEnabled && user" v-on:click="triggerAbandonedCartEmail" class="abandoned-cart-btn btn btn-primary btn-block btn-lg">
                 Trigger Abandoned Cart email
               </button>
             </div>
           </div>
         </div>
+
+        <!-- <RecommendedProductsSection :feature="feature" :recommendedProducts="featuredProducts">
+        <template #heading>
+          Featured products
+        </template>
+        </RecommendedProductsSection> -->
+
+        <RecommendedProductsSection
+          :explainRecommended="explainRecommended"
+          :recommendedProducts="relatedProducts"
+          :feature="feature"
+        >
+          <template #heading>Compare similar items</template>
+        </RecommendedProductsSection>
       </div>
     </template>
   </Layout>
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex';
+import swal from 'sweetalert';
+
+import { mapState, mapActions, mapGetters } from 'vuex';
+import { RepositoryFactory } from '@/repositories/RepositoryFactory';
+
 
 import { AnalyticsHandler } from '@/analytics/AnalyticsHandler'
 
 import CartItem from './components/CartItem.vue';
 import Layout from '@/components/Layout/Layout';
+import RecommendedProductsSection from '@/components//RecommendedProductsSection/RecommendedProductsSection';
+const RecommendationsRepository = RepositoryFactory.get('recommendations');
+const MAX_RECOMMENDATIONS = 9;
+const EXPERIMENT_FEATURE = 'home_product_recs';
+
 
 export default {
   name: 'Cart',
   components: {
     Layout,
     CartItem,
+    RecommendedProductsSection
   },
   props: {
   },
   data () {
     return {  
-      pinpointEnabled : process.env.VUE_APP_PINPOINT_APP_ID 
+      pinpointEnabled : process.env.VUE_APP_PINPOINT_APP_ID,
+      feature: EXPERIMENT_FEATURE,
+      featuredProducts: null,
+      quantity: 1,
+      relatedProducts: null,
+      explainRecommended: null,
     }
   },
   created() {
@@ -75,6 +104,7 @@ export default {
     isLoading() {
       return !this.cart;
     },
+   
         
 
     cartQuantityReadout() {
@@ -89,7 +119,32 @@ export default {
       return `Summary (${this.cartQuantity}) ${this.cartQuantity === 1 ? 'item' : 'items'}`;
     },
   },
+  
+ watch: {
+    $route: {
+      immediate: true,
+      handler() {
+        this.fetchData();
+      },
+    },
+  },
   methods: {
+     ...mapActions(['addToCart']),
+    resetQuantity() {
+      this.quantity = 1;
+    },
+    async addProductToCart() {
+      await this.addToCart({
+        product: this.product,
+        quantity: this.quantity,
+        feature: this.$route.query.feature,
+        exp: this.$route.query.exp,
+      });
+
+      this.renderAddedToCartConfirmation();
+
+      this.resetQuantity();
+    },
     async triggerAbandonedCartEmail () {
       if (this.cart && this.cart.items.length > 0 ){
       const cartItem = await this.getProductByID(this.cart.items[0].product_id)
@@ -99,6 +154,63 @@ export default {
         console.error("No items to export")
       }
     },
+    async fetchData() {
+
+      // reset in order to trigger recalculation in carousel - carousel UI breaks without this
+      this.relatedProducts = null;
+      this.getRelatedProducts();
+
+    },
+    async getRelatedProducts() {
+      const response = await RecommendationsRepository.getRelatedProducts(
+        this.personalizeUserID ?? '',
+        this.cart.items[0].product_id,
+        MAX_RECOMMENDATIONS,
+        EXPERIMENT_FEATURE,
+      );
+
+      if (response.headers) {
+        const experimentName = response.headers['x-experiment-name'];
+        const personalizeRecipe = response.headers['x-personalize-recipe'];
+
+        if (experimentName || personalizeRecipe) {
+          const explanation = experimentName
+            ? `Active experiment: ${experimentName}`
+            : `Personalize recipe: ${personalizeRecipe}`;
+
+          this.explainRecommended = {
+            activeExperiment: !!experimentName,
+            personalized: !!personalizeRecipe,
+            explanation,
+          };
+        }
+      }
+
+      this.relatedProducts = response.data;
+
+      if (this.relatedProducts.length > 0 && 'experiment' in this.relatedProducts[0]) {
+        AnalyticsHandler.identifyExperiment(this.user, this.relatedProducts[0].experiment);
+      }
+    },
+    
+    renderAddedToCartConfirmation() {
+      swal({
+        title: 'Added to Cart',
+        icon: 'success',
+        buttons: {
+          cancel: 'Continue Shopping',
+          cart: 'View Cart',
+        },
+      }).then((value) => {
+        switch (value) {
+          case 'cancel':
+            break;
+          case 'cart':
+            this.$router.push('/cart');
+        }
+      });
+    },
+    
   },
 };
 </script>

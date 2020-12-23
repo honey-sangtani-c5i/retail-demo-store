@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	guuuid "github.com/google/uuid"
-	"github.com/jinzhu/copier"
+	"jinzhu/copier"
 )
 
 // Root/base URL to use when building fully-qualified URLs to product detail view.
