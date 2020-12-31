@@ -1,5 +1,5 @@
 <template>
-  <Layout :isLoading="isLoading" :previousPageLinkProps="previousPageLinkProps">
+  <Layout :isLoading="isLoading" :previousPageLinkProps="previousPageLinkProps" backgroundColor="#adb5bd">
     <template #default>
       <div class="container">
         <main class="product-container mb-5 text-left">

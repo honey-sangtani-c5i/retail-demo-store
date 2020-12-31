@@ -1,5 +1,5 @@
 <template>
-  <Layout>
+  <Layout backgroundColor="#dee2e6">
     <div class="content">
 
       <!-- Loading Indicator -->

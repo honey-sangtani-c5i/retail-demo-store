@@ -1,5 +1,5 @@
 <template>
-  <Layout>
+  <Layout backgroundColor="#dee2e6">
     <div class="content">
       <div class="container">
         <h3>Customer Support</h3>

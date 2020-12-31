@@ -1,5 +1,5 @@
 <template>
-  <Layout :isLoading="isLoading">
+  <Layout :isLoading="isLoading" backgroundColor="#dee2e6">
     <template #default>
       <div class="container text-left">
         <div class="row">
@@ -147,7 +147,8 @@ export default {
     },
     async triggerAbandonedCartEmail () {
       if (this.cart && this.cart.items.length > 0 ){
-      const cartItem = await this.getProductByID(this.cart.items[0].product_id)
+      const cartItem = await this.cart.items[0].product_id
+
       AnalyticsHandler.recordAbanonedCartEvent(this.user,this.cart,cartItem)
       }
       else{

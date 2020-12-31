@@ -38,7 +38,7 @@ export default {
 
 <style scoped>
 .navigation {
-  background: var(--white);
+  background: #dee2e6;
   border-bottom: 1px solid var(--grey-500);
   box-shadow: 6px 2px 6px var(--grey-200);
 }

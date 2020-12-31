@@ -1,7 +1,7 @@
 <template>
   <footer>
     <div class="container justify-content-center d-flex align-items-center">
-      <div class="rds">Course5 NBS Demo Store</div>
+      <div class="rds"><img src="/logo.png" class="img" style="margin-top: 0px;"/> NBS Demo Store</div>
       <!-- <div class="separator mx-2" aria-hidden></div> -->
       <!-- <img src="/powered-by-logo.svg" alt="powered by AWS" class="img" /> -->
     </div>
